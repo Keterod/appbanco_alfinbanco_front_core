@@ -233,6 +233,9 @@ export default function SolicitudesPage() {
     if (sol.estado === 'enviada') {
       return ['aprobar', 'condicionar', 'rechazar']
     }
+    if (sol.estado === 'condicionada') {
+      return ['aprobar', 'rechazar']
+    }
     if (sol.estado === 'aprobada') {
       return ['desembolsar']
     }
