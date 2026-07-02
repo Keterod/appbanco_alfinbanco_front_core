@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
   FileText, PlusCircle, RefreshCw, StickyNote, Send, UserCheck,
-  CheckCircle, XCircle, AlertTriangle, DollarSign, ArrowLeft,
+  CheckCircle, XCircle, AlertTriangle, DollarSign, ArrowLeft, Calendar,
 } from 'lucide-react'
 import PageHead from '../components/layout/PageHead.jsx'
 import Loader from '../components/ui/Loader.jsx'
@@ -42,6 +42,9 @@ export default function SolicitudesPage() {
   const [detalle, setDetalle] = useState(null)
   const [accionLoading, setAccionLoading] = useState(false)
 
+  const [fechaInicio, setFechaInicio] = useState('')
+  const [fechaFin, setFechaFin] = useState('')
+
   const [showCondicionar, setShowCondicionar] = useState(false)
   const [condForm, setCondForm] = useState({ monto_aprobado: '', observacion: '' })
   const [condError, setCondError] = useState(null)
@@ -50,13 +53,28 @@ export default function SolicitudesPage() {
   const [rechazoMotivo, setRechazoMotivo] = useState('')
   const [rechazoError, setRechazoError] = useState(null)
 
-  const cargar = useCallback(() => {
+  const cargar = useCallback((filters = {}) => {
     setLoading(true)
-    listarSolicitudes()
+    listarSolicitudes(filters)
       .then((data) => setItems(data || []))
       .catch((err) => setError(extractError(err)))
       .finally(() => setLoading(false))
   }, [])
+
+  const handleFiltrar = () => {
+    setError(null)
+    const filters = {}
+    if (fechaInicio) filters.fecha_inicio = fechaInicio
+    if (fechaFin) filters.fecha_fin = fechaFin
+    cargar(filters)
+  }
+
+  const handleLimpiarFiltros = () => {
+    setFechaInicio('')
+    setFechaFin('')
+    setError(null)
+    cargar({})
+  }
 
   useEffect(() => { cargar() }, [cargar])
 
@@ -229,7 +247,7 @@ export default function SolicitudesPage() {
         icon={FileText}
         actions={
           <>
-            <button className="hb-btn hb-btn-gray hb-btn-sm" onClick={cargar}><RefreshCw size={15} /> Actualizar</button>
+            <button className="hb-btn hb-btn-gray hb-btn-sm" onClick={handleFiltrar}><RefreshCw size={15} /> Actualizar</button>
             <button className="hb-btn" onClick={() => navigate('/solicitudes/nueva')}><PlusCircle size={16} /> Nueva</button>
           </>
         }
@@ -237,6 +255,40 @@ export default function SolicitudesPage() {
 
       {error && <Alert tipo="error">{error}</Alert>}
       {ok && <Alert tipo="success">{ok}</Alert>}
+
+      <div className="hb-card" style={{ marginBottom: 18, padding: 16 }}>
+        <div className="hb-card-title" style={{ marginBottom: 12 }}>
+          <Calendar size={16} /> Filtros
+        </div>
+        <div className="hb-grid-2" style={{ gap: '0 18px' }}>
+          <div className="hb-field" style={{ marginBottom: 0 }}>
+            <label>Desde</label>
+            <input
+              type="date"
+              className="hb-input"
+              value={fechaInicio}
+              onChange={(e) => setFechaInicio(e.target.value)}
+            />
+          </div>
+          <div className="hb-field" style={{ marginBottom: 0 }}>
+            <label>Hasta</label>
+            <input
+              type="date"
+              className="hb-input"
+              value={fechaFin}
+              onChange={(e) => setFechaFin(e.target.value)}
+            />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 14, flexWrap: 'wrap' }}>
+          <button className="hb-btn hb-btn-sm" onClick={handleFiltrar} disabled={loading}>
+            <Calendar size={14} /> Filtrar
+          </button>
+          <button className="hb-btn hb-btn-sm hb-btn-gray" onClick={handleLimpiarFiltros} disabled={loading}>
+            Limpiar filtros
+          </button>
+        </div>
+      </div>
 
       {loading ? (
         <Loader text="Cargando solicitudes…" />

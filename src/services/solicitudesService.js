@@ -1,4 +1,4 @@
-import api, { TOKEN_KEY } from './api.js'
+import api from './api.js'
 import { solicitudesData } from '../mocks/mockSolicitudes.js'
 
 const USE_MOCKS = import.meta.env.VITE_USE_MOCKS === 'true'
@@ -7,24 +7,15 @@ function delay(ms = 300) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-export async function listarSolicitudes() {
+export async function listarSolicitudes(filters = {}) {
   if (USE_MOCKS) {
     await delay()
     return [...solicitudesData]
   }
-  // DEBUG temporal: rastrear origen, URL y headers exactos de la petición a /solicitudes
-  const debugUrl = api.getUri({ url: '/solicitudes', method: 'GET' })
-  const debugToken = localStorage.getItem(TOKEN_KEY)
-  const debugHeaders = {
-    ...api.defaults.headers.common,
-    ...api.defaults.headers.get,
-    ...(debugToken ? { Authorization: `Bearer ${debugToken}` } : {}),
-  }
-  console.trace('Origen de la llamada a /solicitudes')
-  console.log('[DEBUG listarSolicitudes] URL completa:', debugUrl)
-  console.log('[DEBUG listarSolicitudes] headers:', debugHeaders)
-
-  const { data } = await api.get('/solicitudes')
+  const params = {}
+  if (filters.fecha_inicio) params.fecha_inicio = filters.fecha_inicio
+  if (filters.fecha_fin) params.fecha_fin = filters.fecha_fin
+  const { data } = await api.get('/solicitudes', { params })
   return data
 }
 
